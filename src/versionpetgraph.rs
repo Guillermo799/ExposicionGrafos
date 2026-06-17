@@ -53,4 +53,107 @@ pub fn ejecutar() {
     println!("Nodos   : {}", red.node_count());
     // edge_count() devuelve el número total de aristas (vías/conexiones) en el grafo.
     println!("Aristas : {}", red.edge_count());
+
+    // Busca y muestra la ruta más corta entre Zentova y Nexara usando A*
+    buscar_ruta(
+        &red,
+        zentova,
+        nexara
+    );
+
+// Muestra la lista de adyacencia completa del grafo
+mostrar_adyacencia(&red);
+// Recorre el grafo en anchura (BFS) comenzando desde Zentova
+mostrar_bfs(&red, zentova);
+
+}
+
+// Imprime, para cada nodo del grafo, la lista de sus vecinos directos
+// (es decir, las estaciones con las que tiene una conexión directa).
+fn mostrar_adyacencia(
+    red: &UnGraph<&str, ()>
+) {
+
+    println!("\nLISTA DE ADYACENCIA\n");
+
+    for nodo in red.node_indices() {
+
+        print!("{} -> ", red[nodo]);
+
+        let vecinos: Vec<_> =
+            red.neighbors(nodo)
+               .map(|v| red[v])
+               .collect();
+
+        println!("{}", vecinos.join(", "));
+    }
+}
+
+// Realiza un recorrido BFS (Breadth-First Search / Búsqueda en Anchura)
+// a partir de un nodo de origen, mostrando el orden en que se visitan los nodos.
+fn mostrar_bfs(
+    red: &UnGraph<&str, ()>,
+    origen: NodeIndex,
+) {
+
+    println!("\nRECORRIDO BFS\n");
+
+    let mut bfs = Bfs::new(red, origen);
+
+    let mut paso = 1;
+
+    while let Some(nx) = bfs.next(red) {
+
+        println!(
+            "{}. {}",
+            paso,
+            red[nx]
+        );
+
+        paso += 1;
+    }
+}
+
+// Busca la ruta más corta (en número de saltos) entre un nodo origen y un nodo destino,
+// usando el algoritmo A* (A-star), y la muestra en pantalla paso a paso.
+fn buscar_ruta(
+    red: &UnGraph<&str, ()>,
+    origen: NodeIndex,
+    destino: NodeIndex,
+) {
+
+    // Devuelve Some((costo_total, camino)) si existe una ruta, o None si no hay conexión.
+    if let Some((_costo, camino)) = astar(
+        red,
+        origen,
+        |n| n == destino,
+        |_| 1,
+        |_| 0,
+    ) {
+
+        println!();
+        
+    println!("\nRUTA MINIMA\n");
+
+    println!("Origen  : {}", red[origen]);
+    println!("Destino : {}", red[destino]);
+
+    println!();
+
+    for nodo in &camino {
+
+    println!("{}", red[*nodo]);
+
+    if *nodo != destino {
+        println!("  ↓");
+    }
+    }
+
+    println!();
+    println!("Saltos: {}", camino.len() - 1);
+
+        println!();
+    }
+    // Nota: si astar devuelve None (no hay ruta), esta función no imprime nada,
+    // podría ser útil agregar un mensaje de "ruta no encontrada" en ese caso.
 }
